@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Kayıt Ol{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <h2>Kayıt Ol</h2>
+    <div class="title-underline"></div>
+
+    <form method="POST">
+        <div class="form-group">
+            <label for="email">E-posta:</label>
+            <input type="email" id="email" name="email" placeholder="E-posta adresinizi girin" required>
+        </div>
+        <div class="form-group">
+            <label for="ad_soyad">Ad Soyad:</label>
+            <input type="text" id="ad_soyad" name="ad_soyad" placeholder="Adınız ve soyadınız" required>
+        </div>
+        <div class="form-group">
+            <label for="yas">Yaş:</label>
+            <input type="number" id="yas" name="yas" placeholder="Örn: 25" required>
+        </div>
+        <div class="form-group">
+            <label for="cinsiyet">Cinsiyet:</label>
+            <select id="cinsiyet" name="cinsiyet" required>
+                <option value="" disabled selected>Seçiniz...</option>
+                {% for cinsiyet in cinsiyet_opsiyonlari %}
+                    <option value="{{ cinsiyet }}">{{ cinsiyet }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="egitim_durumu">Eğitim Seviyesi:</label>
+            <select id="egitim_durumu" name="egitim_durumu" required>
+                <option value="" disabled selected>Seçiniz...</option>
+                {% for seviye in egitim_opsiyonlari %}
+                    <option value="{{ seviye }}">{{ seviye }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="is_deneyimi">İş Deneyimi (Yıl):</label>
+            <input type="number" id="is_deneyimi" name="is_deneyimi" placeholder="Örn: 3 (isteğe bağlı)">
+        </div>
+        <div class="form-group">
+            <label for="kariyer_hedefi">Kariyer Hedefleri:</label>
+            <textarea id="kariyer_hedefi" name="kariyer_hedefi" placeholder="Kariyerinizle ilgili hedeflerinizi ve hayallerinizi buraya yazabilirsiniz..."></textarea>
+        </div>
+        <div class="form-group">
+            <label for="password">Şifre:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <div class="form-group">
+            <label for="password_confirm">Şifre Tekrar:</label>
+            <input type="password" id="password_confirm" name="password_confirm" required>
+        </div>
+        <button type="submit" class="btn">Kayıt Ol</button>
+    </form>
+
+    <div class="form-footer-link">
+        <p>Zaten hesabın var mı? <a href="{{ url_for('home') }}">Giriş yap!</a></p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+# Sanal Ortam Klasörü
+venv/
+.venv/
+
+# PyCharm'a özel dosyalar
+.idea/
+
+# Python'un derlenmiş dosyaları
+__pycache__/
+*.pyc
+
+# Veritabanı dosyaları
+*.db
+*.sqlite3
+
+# Gizli bilgileri içeren .env dosyası (ÇOK ÖNEMLİ)
+.env
+
+# Yüklenen dosyalar
+uploads/

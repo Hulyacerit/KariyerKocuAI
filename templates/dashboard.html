@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% block title %}Kontrol Paneli{% endblock %}
+{% block content %}
+<div class="dashboard-container">
+    <nav class="sidebar">
+        <h3>Seçenekler</h3>
+        <ul>
+            <li class="{{ 'active' if page == 'profil' else '' }}"><a href="{{ url_for('dashboard', page='profil') }}">Profil Bilgileri</a></li>
+            <li class="{{ 'active' if page == 'gunluk' else '' }}"><a href="{{ url_for('dashboard', page='gunluk') }}">Günlük</a></li>
+            <li class="{{ 'active' if page == 'hedefler' else '' }}"><a href="{{ url_for('dashboard', page='hedefler') }}">Hedefler</a></li>
+            <li class="{{ 'active' if page == 'cv' else '' }}"><a href="{{ url_for('dashboard', page='cv') }}">CV</a></li>
+            <li class="{{ 'active' if page == 'analiz_gecmisi' else '' }}"><a href="{{ url_for('dashboard', page='analiz_gecmisi') }}">Analiz Geçmişi</a></li>
+            <li class="{{ 'active' if page == 'genel_oneriler' else '' }}"><a href="{{ url_for('dashboard', page='genel_oneriler') }}">Genel Öneriler</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <a href="{{ url_for('logout') }}" class="logout-button">Çıkış Yap</a>
+        </div>
+    </nav>
+    <section class="main-content">
+
+        {% if page == 'profil' %}
+            <h2>Profil Bilgileri</h2>
+
+            <div class="profile-card">
+                <div class="profile-item">
+                    <span class="label">Ad Soyad:</span>
+                    <span class="value">{{ user.ad_soyad }}</span>
+                </div>
+                <div class="profile-item">
+                    <span class="label">E-posta:</span>
+                    <span class="value">{{ user.email }}</span>
+                </div>
+                <div class="profile-item">
+                    <span class="label">Yaş:</span>
+                    <span class="value">{{ user.yas }}</span>
+                </div>
+                <div class="profile-item">
+                    <span class="label">Cinsiyet:</span>
+                    <span class="value">{{ user.cinsiyet.value }}</span>
+                </div>
+                <div class="profile-item">
+                    <span class="label">Eğitim Seviyesi:</span>
+                    <span class="value">{{ user.egitim_durumu.value }}</span>
+                </div>
+                {% if user.is_deneyimi is not none %}
+                <div class="profile-item">
+                    <span class="label">İş Deneyimi:</span>
+                    <span class="value">{{ user.is_deneyimi }} yıl</span>
+                </div>
+                {% endif %}
+                <div class="profile-item full-width">
+                    <span class="label">Kariyer Hedefleri:</span>
+                    <p class="value-text">{{ user.kariyer_hedefi or 'Belirtilmemiş' }}</p>
+                </div>
+            </div>
+
+        {% elif page == 'gunluk' %}
+            <h2>Günlük</h2>
+            <div class="diary-container">
+                <div class="diary-editor">
+                    <div class="date-picker-container"><label for="diary-date">Tarih Seç:</label><input type="date" id="diary-date"></div>
+                    <h3 id="selected-date-display"></h3>
+                    <textarea id="diary-content" rows="15" placeholder="Bugün aklından neler geçiyor?"></textarea>
+                    <div class="diary-actions"><button id="btn-suggest" class="btn btn-suggest">Öneri Getir</button><button id="btn-analyze" class="btn btn-analyze">Analiz Et</button></div>
+                </div>
+                <div class="diary-result">
+                    <h3>Sonuç</h3>
+                    <div id="ai-result-box" class="ai-result-box">Analiz veya öneri sonucu burada görünecek...</div>
+                    <div id="loading-spinner" style="display: none; text-align: center; padding: 20px;">Yükleniyor...</div>
+                </div>
+            </div>
+
+        {% elif page == 'hedefler' %}
+            <h2>Hedefler</h2>
+            <div class="goal-page-container">
+                <div class="goal-editor-area">
+                    <form id="goal-form" action="{{ url_for('add_goal') }}" method="POST">
+                        <input type="hidden" name="goal_id" id="goal_id_input">
+                        <h3>Yeni Hedef Ekle veya Düzenle</h3>
+                        <div class="goal-date-pickers">
+                            <div><label for="start_date">Başlangıç Tarihi:</label><input type="date" id="start_date" name="start_date" required></div>
+                            <div><label for="end_date">Bitiş Tarihi:</label><input type="date" id="end_date" name="end_date" required></div>
+                        </div>
+                        <textarea name="content" id="goal-content-input" rows="5" placeholder="Örn: Müşteriden gelen case kısmını güncellemek..." required></textarea>
+                        <button type="submit" class="btn">Hedefi Kaydet/Güncelle</button>
+                        <button type="button" id="clear-goal-form-btn" style="display:none;">Yeni Hedef Ekle</button>
+                    </form>
+                    <hr><h3>Mevcut Hedefler</h3>
+                    <div class="past-goals-list">
+                        {% for goal in data.goals %}
+                        <div class="goal-card" data-goal-id="{{ goal.id }}" data-content="{{ goal.content }}" data-start="{{ goal.start_date.strftime('%Y-%m-%d') }}" data-end="{{ goal.end_date.strftime('%Y-%m-%d') }}">
+                            <div class="goal-card-content"><p>{{ goal.content }}</p><small><strong>Tarih Aralığı:</strong> {{ goal.start_date.strftime('%d.%m.%Y') }} - {{ goal.end_date.strftime('%d.%m.%Y') }}</small></div>
+                            <div class="goal-card-actions">
+                                <button class="btn-sm btn-goal-suggest">Öneri Getir</button><button class="btn-sm btn-edit-goal">Düzenle</button>
+                                <form action="{{ url_for('delete_goal', goal_id=goal.id) }}" method="POST" style="display:inline;"><button type="submit" class="btn-sm btn-delete">Sil</button></form>
+                            </div>
+                        </div>
+                        {% else %}<p>Henüz kayıtlı hedefiniz bulunmuyor.</p>{% endfor %}
+                    </div>
+                </div>
+                <div class="goal-suggestion-area">
+                    <h3>Öneriler</h3>
+                    <div id="goal-ai-result-box" class="ai-result-box">Hedefiniz için öneriler burada görünecek...</div>
+                    <div id="goal-loading-spinner" style="display: none; text-align: center; padding: 20px;">Yükleniyor...</div>
+                </div>
+            </div>
+
+        {% elif page == 'cv' %}
+<h2>CV Analizi ve Karşılaştırma</h2>
+<div class="cv-page-container">
+    <div class="cv-editor-area">
+
+        <div class="cv-section">
+            <h3>Tek CV Analizi ve Öneri</h3>
+            <form id="single-cv-form">
+                <div class="form-group">
+                    <label>CV Dosyanızı Yükleyin (.pdf):</label>
+                    <div class="file-upload-wrapper">
+                        <label for="cv_file_single" class="btn-file-upload">Dosya Seç</label>
+                        <input type="file" id="cv_file_single" name="cv_file" accept=".pdf">
+                        <span class="file-chosen-text">Dosya seçilmedi</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="target_company_single">Başvurulacak Şirket:</label>
+                    <input type="text" id="target_company_single" name="target_company" placeholder="Örn: Google">
+                </div>
+                <div class="form-group">
+                    <label for="target_position_single">Başvurulacak Pozisyon:</label>
+                    <input type="text" id="target_position_single" name="target_position" placeholder="Örn: Veri Analisti">
+                </div>
+                <div class="diary-actions">
+                    <button type="button" id="btn-cv-suggest-single" class="btn btn-suggest">Öneri Getir</button>
+                    <button type="button" id="btn-cv-analyze-single" class="btn btn-analyze">Analiz Et</button>
+                </div>
+            </form>
+        </div>
+
+        <hr class="section-divider">
+
+        <div class="cv-section">
+            <h3>İki CV'yi Karşılaştır</h3>
+            <form id="compare-cv-form">
+                 <div class="form-group">
+                    <label>1. CV Dosyası (.pdf):</label>
+                    <div class="file-upload-wrapper">
+                        <label for="cv_file_1" class="btn-file-upload">1. Dosyayı Seç</label>
+                        <input type="file" id="cv_file_1" name="cv_file_1" accept=".pdf">
+                        <span class="file-chosen-text">Dosya seçilmedi</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>2. CV Dosyası (.pdf):</label>
+                    <div class="file-upload-wrapper">
+                        <label for="cv_file_2" class="btn-file-upload">2. Dosyayı Seç</label>
+                        <input type="file" id="cv_file_2" name="cv_file_2" accept=".pdf">
+                        <span class="file-chosen-text">Dosya seçilmedi</span>
+                    </div>
+                </div>
+                <div class="diary-actions" style="margin-top: 10px;">
+                    <button type="button" id="btn-cv-compare" class="btn btn-compare">İki CV'yi Karşılaştır</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+    <div class="cv-result-area">
+        <h3>Sonuç</h3>
+        <div id="cv-ai-result-box" class="ai-result-box">CV analizi, öneri veya karşılaştırma sonucu burada görünecek...</div>
+        <div id="cv-loading-spinner" style="display: none; text-align: center; padding: 20px;">Yükleniyor...</div>
+    </div>
+</div>
+
+        {% elif page == 'analiz_gecmisi' %}
+            <h2>Analiz Geçmişi</h2>
+            <p>Görüntülemek istediğiniz analiz geçmişi türünü seçin.</p>
+            <div class="history-choice-container">
+                <a href="{{ url_for('dashboard', page='analiz_gecmisi', history_type='gunluk') }}" class="history-choice-card {{ 'active' if data.history_type == 'gunluk' else '' }}">Günlük Analizleri</a>
+                <a href="{{ url_for('dashboard', page='analiz_gecmisi', history_type='cv') }}" class="history-choice-card {{ 'active' if data.history_type == 'cv' else '' }}">CV Analizleri</a>
+            </div>
+            {% if data.history_type and data.results %}
+            <div class="history-results-list">
+                <h3>{{ "Günlük" if data.history_type == 'gunluk' else "CV" }} Analiz Sonuçlarınız</h3>
+                {% for result in data.results %}<div class="history-result-card"><div class="history-header"><span class="history-type">{{ result.analysis_type }}</span><span class="history-date">{{ result.created_at.strftime('%d %B %Y, %H:%M') }}</span></div><div class="history-body"><div class="history-request"><strong>Sizin Girdiniz:</strong><p>{{ result.request_text }}</p></div><div class="history-response"><strong>Yapay Zeka Cevabı:</strong><p>{{ result.response_text | safe }}</p></div></div></div>{% endfor %}
+            </div>
+            {% elif data.history_type and not data.results %}<p style="text-align: center; margin-top: 30px;">Bu kategori için henüz bir analiz geçmişiniz bulunmuyor.</p>{% endif %}
+
+        {% elif page == 'genel_oneriler' %}
+            <h2>Genel Öneriler ve Geçmiş Tavsiyeler</h2>
+            <div class="holistic-analysis-container">
+                <div class="holistic-analysis-box">
+                    <h3>Bütünsel Kariyer Analizi</h3>
+                    <p>Tüm profilinizi, günlüklerinizi, hedeflerinizi ve CV'nizi kullanarak size özel bir kariyer yol haritası oluşturmak için aşağıdaki butona tıklayın.</p>
+                    <button id="btn-holistic-analysis" class="btn">Bana Genel Bir Kariyer Analizi Yap</button>
+                    <div id="holistic-result-area" class="ai-result-box" style="display:none; margin-top:20px;"></div>
+                    <div id="holistic-loading-spinner" style="display: none; text-align: center; padding: 20px;">Kapsamlı analiziniz hazırlanıyor, lütfen bekleyin...</div>
+                </div>
+            </div>
+            <hr style="margin: 40px 0;">
+            <h3>Geçmiş Önerileri Görüntüle</h3>
+            <div class="history-choice-container">
+                <a href="{{ url_for('dashboard', page='genel_oneriler', suggestion_type='gunluk') }}" class="history-choice-card {{ 'active' if data.suggestion_type == 'gunluk' else '' }}">Günlük Önerileri</a>
+                <a href="{{ url_for('dashboard', page='genel_oneriler', suggestion_type='hedefler') }}" class="history-choice-card {{ 'active' if data.suggestion_type == 'hedefler' else '' }}">Hedef Önerileri</a>
+                <a href="{{ url_for('dashboard', page='genel_oneriler', suggestion_type='cv') }}" class="history-choice-card {{ 'active' if data.suggestion_type == 'cv' else '' }}">CV Önerileri</a>
+            </div>
+            {% if data.suggestion_type and data.results %}
+            <div class="history-results-list">
+                <h3>Geçmiş {{ data.suggestion_type.capitalize() }} Önerileriniz</h3>
+                {% for result in data.results %}
+                <div class="history-result-card">
+                    <div class="history-header"><span class="history-type">{{ result.analysis_type }}</span><span class="history-date">{{ result.created_at.strftime('%d %B %Y, %H:%M') }}</span></div>
+                    <div class="history-body"><div class="history-request"><strong>İlgili Girdi:</strong><p>{{ result.request_text }}</p></div><div class="history-response"><strong>Yapay Zeka Önerisi:</strong><p>{{ result.response_text | safe }}</p></div></div>
+                </div>
+                {% endfor %}
+            </div>
+            {% elif data.suggestion_type and not data.results %}<p style="text-align: center; margin-top: 30px;">Bu kategori için henüz bir öneri geçmişiniz bulunmuyor.</p>{% endif %}
+
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
