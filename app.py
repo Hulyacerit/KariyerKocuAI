@@ -14,10 +14,15 @@ from ai.analyzer import (
     get_holistic_analysis
 )
 
-UPLOAD_FOLDER = 'uploads'
+# YENİ VE DOĞRU HALİ:
+app = Flask(__name__)
+
+# Projenin ana dizininin tam yolunu alıyoruz (örn: /home/Hulya5/KariyerKocuAI)
+basedir = os.path.abspath(os.path.dirname(__file__))
+# 'uploads' klasörünün tam yolunu oluşturuyoruz
+UPLOAD_FOLDER = os.path.join(basedir, 'uploads')
 ALLOWED_EXTENSIONS = {'pdf'}
 
-app = Flask(__name__)
 app.secret_key = 'cok_gizli_bir_anahtar_buraya_yazin'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
