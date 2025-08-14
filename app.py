@@ -335,4 +335,7 @@ def holistic_analysis():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Sunucunun bize verdiği portu kullan, eğer yoksa (yerel bilgisayarda) 5000'i kullan
+    port = int(os.environ.get("PORT", 5000))
+    # host='0.0.0.0' ayarı, uygulamanın dışarıdan gelen bağlantıları kabul etmesini sağlar
+    app.run(host='0.0.0.0', port=port, debug=True)
