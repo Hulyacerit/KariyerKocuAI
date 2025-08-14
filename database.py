@@ -1,15 +1,26 @@
 import enum
 import datetime
+import os  # BU SATIRI EKLEDİK
 from sqlalchemy import create_engine, Column, Integer, String, Enum as SQLAlchemyEnum, Text, DateTime, Date, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 
-DATABASE_URL = "sqlite:///kariyer_kocu.db"
+# ================== DEĞİŞEN KISIM BAŞLANGICI ==================
+
+# Projenin çalıştığı ana dizini buluyoruz (örn: /home/Hulya5/KariyerKocuAI)
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+# Veritabanı URL'sini bu dinamik yola göre oluşturuyoruz
+DATABASE_URL = "sqlite:///" + os.path.join(basedir, "kariyer_kocu.db")
+
+# ================== DEĞİŞEN KISIM BİTİŞİ ==================
+
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# --- Enum Sınıfları, User, DiaryEntry, AnalysisResult, Goal (Değişiklik yok) ---
+
+# --- Dosyanın geri kalanı tamamen aynı, değişiklik yok ---
 class EgitimDurumu(str, enum.Enum):
     ilkokul_ogrenci = "İlkokul Öğrencisi"
     ilkokul_mezun = "İlkokul Mezunu"
@@ -39,7 +50,6 @@ class User(Base):
     diary_entries = relationship("DiaryEntry", back_populates="owner")
     analysis_results = relationship("AnalysisResult", back_populates="owner")
     goals = relationship("Goal", back_populates="owner")
-    # YENİ: Bir kullanıcının birden çok CV'si olabilir
     cvs = relationship("Cv", back_populates="owner")
 
 class DiaryEntry(Base):
@@ -69,17 +79,15 @@ class Goal(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="goals")
 
-# YENİ: CV için Veritabanı Modeli
 class Cv(Base):
     __tablename__ = "cvs"
     id = Column(Integer, primary_key=True, index=True)
     original_filename = Column(String, nullable=False)
-    extracted_text = Column(Text, nullable=True) # PDF'ten çıkarılan metin
+    extracted_text = Column(Text, nullable=True)
     target_company = Column(String)
     target_position = Column(String)
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     user_id = Column(Integer, ForeignKey("users.id"))
-
     owner = relationship("User", back_populates="cvs")
 
 def create_db_and_tables():
