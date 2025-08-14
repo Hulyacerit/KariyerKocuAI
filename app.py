@@ -14,24 +14,18 @@ from ai.analyzer import (
     get_holistic_analysis
 )
 
-# YENİ VE DOĞRU HALİ:
-app = Flask(__name__)
-
-# Projenin ana dizininin tam yolunu alıyoruz (örn: /home/Hulya5/KariyerKocuAI)
+# Projenin ana dizininin tam yolunu alıyoruz
 basedir = os.path.abspath(os.path.dirname(__file__))
 # 'uploads' klasörünün tam yolunu oluşturuyoruz
 UPLOAD_FOLDER = os.path.join(basedir, 'uploads')
 ALLOWED_EXTENSIONS = {'pdf'}
 
+app = Flask(__name__)
 app.secret_key = 'cok_gizli_bir_anahtar_buraya_yazin'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-# --- GİRİŞ, KAYIT, ÇIKIŞ (Temel Fonksiyonlar) ---
+# ... (Yukarıdaki kodun geri kalanının tamamı, tüm route'lar dahil, aynen kalacak) ...
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
@@ -109,23 +103,17 @@ def logout():
     return redirect(url_for('home'))
 
 
-# --- DASHBOARD (Tüm Sayfaların Verilerini Çeken Ana Fonksiyon) ---
 @app.route('/dashboard')
 def dashboard():
-    if 'user_id' not in session:
-        flash('Bu sayfayı görüntülemek için giriş yapmalısınız.', 'danger')
-        return redirect(url_for('home'))
-
+    if 'user_id' not in session: return redirect(url_for('home'))
     db = SessionLocal()
     try:
         user = db.query(User).filter(User.id == session['user_id']).first()
         if not user:
             session.clear()
             return redirect(url_for('home'))
-
         page = request.args.get('page', 'profil')
         data = {}
-
         if page == 'gunluk':
             data['entries'] = db.query(DiaryEntry).filter(DiaryEntry.user_id == user.id).order_by(
                 desc(DiaryEntry.created_at)).all()
@@ -159,13 +147,11 @@ def dashboard():
                 data['results'] = db.query(AnalysisResult).filter(AnalysisResult.user_id == user.id,
                                                                   AnalysisResult.analysis_type == 'CV Önerisi').order_by(
                     desc(AnalysisResult.created_at)).all()
-
         return render_template('dashboard.html', user=user, page=page, data=data)
     finally:
         db.close()
 
 
-# --- HEDEF YÖNETİMİ (CRUD) ---
 @app.route('/add_goal', methods=['POST'])
 def add_goal():
     if 'user_id' not in session: return redirect(url_for('home'))
@@ -219,7 +205,6 @@ def delete_goal(goal_id):
     return redirect(url_for('dashboard', page='hedefler'))
 
 
-# --- CV YÖNETİMİ ---
 @app.route('/upload_cv', methods=['POST'])
 def upload_cv():
     if 'user_id' not in session: return jsonify({"error": "Lütfen giriş yapın."}), 401
@@ -271,22 +256,15 @@ def compare_cvs():
     return jsonify({"response": ai_response})
 
 
-# --- YAPAY ZEKA API ROUTE'LARI ---
 @app.route('/get_ai_response', methods=['POST'])
 def get_ai_response():
     if 'user_id' not in session: return jsonify({"error": "Lütfen giriş yapın."}), 401
     data = request.get_json()
     text, action_type = data.get('text'), data.get('action_type')
     if not text or not action_type: return jsonify({"error": "Eksik bilgi gönderildi."}), 400
-
-    action_map = {
-        'analyze': (get_analysis, 'Analiz'),
-        'suggest': (get_suggestion, 'Öneri'),
-        'goal_suggest': (get_goal_suggestion, 'Hedef Önerisi'),
-        'cv_analyze': (analyze_cv, 'CV Analizi'),
-        'cv_suggest': (suggest_cv_improvements, 'CV Önerisi'),
-    }
-
+    action_map = {'analyze': (get_analysis, 'Analiz'), 'suggest': (get_suggestion, 'Öneri'),
+                  'goal_suggest': (get_goal_suggestion, 'Hedef Önerisi'), 'cv_analyze': (analyze_cv, 'CV Analizi'),
+                  'cv_suggest': (suggest_cv_improvements, 'CV Önerisi'), }
     if action_type in action_map:
         ai_function, db_type = action_map[action_type]
         if action_type == 'cv_suggest':
@@ -296,7 +274,6 @@ def get_ai_response():
             ai_response = ai_function(text)
     else:
         return jsonify({"error": "Geçersiz işlem türü."}), 400
-
     if "hata oluştu" not in ai_response:
         db = SessionLocal()
         try:
@@ -334,8 +311,7 @@ def holistic_analysis():
         db.close()
 
 
+# DÜZENLENEN KISIM: Bu blok PythonAnywhere'de çalışmaz ve gereksizdir.
+# Kendi bilgisayarınızda test etmek için bu şekilde bırakılabilir.
 if __name__ == '__main__':
-    # Sunucunun bize verdiği portu kullan, eğer yoksa (yerel bilgisayarda) 5000'i kullan
-    port = int(os.environ.get("PORT", 5000))
-    # host='0.0.0.0' ayarı, uygulamanın dışarıdan gelen bağlantıları kabul etmesini sağlar
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(debug=True)
